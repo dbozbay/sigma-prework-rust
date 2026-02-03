@@ -64,3 +64,31 @@ fn main() {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_maxmin() {
+        assert_eq!(maxmin(&vec![3, 1, 4, 1, -5]), [4, -5]);
+        assert_eq!(maxmin(&vec![10, 20, 30, 40, 50]), [50, 10]);
+        assert_eq!(maxmin(&vec![-1, -2, -3, -4, -5]), [-1, -5]);
+        assert_eq!(maxmin(&vec![0, 0, 0, 0]), [0, 0]);
+    }
+
+    #[test]
+    fn test_parse_numbers_valid_input() {
+        assert_eq!(parse_numbers("1 2 3").unwrap(), vec![1, 2, 3]);
+        assert_eq!(parse_numbers("4,5,6").unwrap(), vec![4, 5, 6]);
+        assert_eq!(parse_numbers("7;8;9").unwrap(), vec![7, 8, 9]);
+        assert_eq!(parse_numbers("10:11:12").unwrap(), vec![10, 11, 12]);
+    }
+
+    #[test]
+    fn test_parse_numbers_invalid_input() {
+        assert!(parse_numbers("1, 2, three").is_err());
+        assert!(parse_numbers("4; five; 6").is_err());
+        assert!(parse_numbers("seven:8:9").is_err());
+    }
+}
