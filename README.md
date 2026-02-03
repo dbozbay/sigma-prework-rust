@@ -16,7 +16,7 @@ cargo run --bin maxmin
 
 **Example:**
 ```
-Enter a list of integers separated by commas: -100, 0, 0, 0, 100
+Enter a list of integers: -100, 0, 0, 0, 100
 Maximum and minimum values are: [100, -100]
 ```
 
