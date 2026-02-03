@@ -1,27 +1,29 @@
-use std::io;
+use std::{io, num::ParseIntError};
 
-/// Prompts the user for a list of integers and validates the input.
-fn get_valid_numbers() -> Vec<i32> {
-    loop {
-        println!("Enter a list of integers separated by commas: ");
+/// Prompts the user for input and returns the entered string.
+fn get_user_input() -> String {
+    println!("Enter a list of integers: ");
 
-        let mut numbers_input = String::new();
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read input.");
 
-        io::stdin()
-            .read_line(&mut numbers_input)
-            .expect("Failed to read input.");
+    input.trim().to_string()
+}
 
-        let result: Result<Vec<i32>, _> = numbers_input
-            .split(",")
-            .map(|s| s.trim().parse::<i32>())
-            .collect();
+/// Parses a string of integers separated by spaces, commas, semicolons, or colons.
+fn parse_numbers(input: &str) -> Result<Vec<i32>, ParseIntError> {
+    let mut result = input.to_string();
 
-        match result {
-            Ok(numbers) if numbers.len() >= 2 => return numbers,
-            Ok(_) => println!("Please enter at least two integers."),
-            Err(_) => println!("Invalid input. Please enter integers only."),
-        }
+    for sep in [",", ";", ":"] {
+        result = result.replace(sep, " ");
     }
+
+    result
+        .split_whitespace()
+        .map(|s| s.parse::<i32>())
+        .collect::<Result<Vec<i32>, ParseIntError>>()
 }
 
 /// Returns the maximum and minimum values from a slice of integers.
@@ -43,6 +45,22 @@ fn maxmin(numbers: &[i32]) -> [i32; 2] {
 }
 
 fn main() {
-    let numbers = get_valid_numbers();
-    println!("The maximum and minimum values are: {:?}", maxmin(&numbers));
+    loop {
+        let input = get_user_input();
+
+        match parse_numbers(&input) {
+            Ok(numbers) => {
+                if numbers.len() < 2 {
+                    println!("Please enter at least two integers.");
+                    continue;
+                }
+                println!("The maximum and minimum values are: {:?}", maxmin(&numbers));
+                break;
+            }
+            Err(e) => {
+                println!("Error: {e}");
+                continue;
+            }
+        }
+    }
 }
