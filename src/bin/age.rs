@@ -59,3 +59,61 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_age_birthday_today() {
+        let today = Local::now().date_naive();
+        let dob = NaiveDate::from_ymd_opt(today.year() - 30, today.month(), today.day()).unwrap();
+        assert_eq!(calculate_age(dob).unwrap(), 30);
+    }
+
+    #[test]
+    fn test_age_birthday_yesterday() {
+        let yesterday = Local::now().date_naive() - chrono::Duration::days(1);
+        let dob =
+            NaiveDate::from_ymd_opt(yesterday.year() - 30, yesterday.month(), yesterday.day())
+                .unwrap();
+        assert_eq!(calculate_age(dob).unwrap(), 30);
+    }
+
+    #[test]
+    fn test_age_birthday_tomorrow() {
+        let tomorrow = Local::now().date_naive() + chrono::Duration::days(1);
+        let dob = NaiveDate::from_ymd_opt(tomorrow.year() - 30, tomorrow.month(), tomorrow.day())
+            .unwrap();
+        assert_eq!(calculate_age(dob).unwrap(), 29);
+    }
+
+    #[test]
+    fn test_age_newborn() {
+        let today = Local::now().date_naive();
+        assert_eq!(calculate_age(today).unwrap(), 0);
+    }
+
+    #[test]
+    fn test_invalid_future_dob() {
+        let future_date = Local::now().date_naive() + chrono::Duration::weeks(52);
+        let result = calculate_age(future_date);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_date_invalid_format() {
+        let result = parse_date("12-31-2000");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_date_valid_format() {
+        let result = parse_date("2000-12-31");
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap(),
+            NaiveDate::from_ymd_opt(2000, 12, 31).unwrap()
+        );
+    }
+}
