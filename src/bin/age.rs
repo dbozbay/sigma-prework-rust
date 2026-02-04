@@ -1,55 +1,61 @@
-use chrono::{Local, NaiveDate, Datelike};
-use std::io;
-use std::str::FromStr;
+use std::{error::Error, io};
 
-#[derive(Debug, Clone, Copy)]
-pub struct DateOfBirth {
-    date: NaiveDate,
+use chrono::{Datelike, Local, NaiveDate};
+
+/// Prompt user for a date of birth in YYYY-MM-DD format
+fn get_user_dob() -> io::Result<String> {
+    println!("Enter your date of birth (YYYY-MM-DD): ");
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+
+    Ok(input.trim().to_string())
 }
 
-impl FromStr for DateOfBirth {
-    type Err = &'static str;
+/// Parse the input date of birth into a NaiveDate
+fn parse_date(input: &str) -> Result<NaiveDate, String> {
+    NaiveDate::parse_from_str(input, "%Y-%m-%d")
+        .map_err(|_| "Invalid date format. Please use YYYY-MM-DD.".to_string())
+}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        NaiveDate::parse_from_str(s, "%Y-%m-%d")
-            .map(|date| DateOfBirth { date })
-            .map_err(|_| "Invalid date format. Please use YYYY-MM-DD.")
+/// Calculate age based on date of birth
+fn calculate_age(dob: NaiveDate) -> Result<u32, String> {
+    let today = Local::now().date_naive();
+
+    if dob > today {
+        return Err("Invalid date of birth. Cannot be in the future.".to_string());
     }
-}
 
-impl DateOfBirth {
-    fn calculate_age(&self) -> u32 {
-        let today = Local::now().date_naive();
-        let mut age = today.year() - self.date.year();
+    let mut age = today.year() - dob.year();
 
-        // Subtract 1 if birthday hasn't occurred yet this year
-        if (today.month(), today.day()) < (self.date.month(), self.date.day()) {
-            age -= 1;
-        }
-
-        age as u32
+    // Subtract 1 if birthday hasn't occurred yet this year
+    if (today.month(), today.day()) < (dob.month(), dob.day()) {
+        age -= 1;
     }
+
+    Ok(age as u32)
 }
 
-/// Prompt user for a valid date of birth in YYYY-MM-DD format
-fn get_valid_date_of_birth() -> DateOfBirth {
+fn main() -> Result<(), Box<dyn Error>> {
     loop {
-        println!("Enter your date of birth (YYYY-MM-DD): ");
+        let input = get_user_dob()?;
 
-        let mut dob_input = String::new();
-        io::stdin()
-            .read_line(&mut dob_input)
-            .expect("Failed to read input");
-
-        match dob_input.trim().parse() {
-            Ok(dob) => return dob,
-            Err(err) => println!("{err}"),
+        match parse_date(&input) {
+            Ok(dob) => match calculate_age(dob) {
+                Ok(age) => {
+                    println!("You are {age} years old.");
+                    break;
+                }
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    continue;
+                }
+            },
+            Err(e) => {
+                eprintln!("Error: {e}");
+            }
         }
     }
-}
 
-fn main() {
-    let dob = get_valid_date_of_birth();
-    let age = dob.calculate_age();
-    println!("You are {} years old.", age);
+    Ok(())
 }
